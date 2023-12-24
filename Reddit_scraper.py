@@ -2,56 +2,81 @@
 from datetime import datetime
 import pandas as pd
 import requests
+import time
+import logging
 
 class RedditScraper:
     # Initialize RedditScraper with subreddit name, start date, and end date.
     def __init__(self, subreddit: str, start_date: str, end_date: str):
+        self.logger = logging.getLogger("DigiKalaScraper")
         self.subreddit = subreddit
         self.url = f"https://www.reddit.com/r/{subreddit}/new.json?sort=new&limit=100"
         self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
         self.end_date = datetime.strptime(end_date, "%Y-%m-%d")
-        self.columns = ["identifier", "ups", "downs", "upvote_ratio", "num_comments", "time"]
+        self.columns = ["identifier", "ups", "User Engagement Ratio", "upvote ratio", "nummber of comments", "title length"]
         self.df = pd.DataFrame(columns=self.columns)
+        self.TOTAL_SUCCESS = 0
+        
+
+        # Set up console logging
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
 
     #Fetch Reddit data using HTTP GET request and return status code and JSON response.
-    def fetch_data(self, url: str, headers: dict):
-        # try, except
-        try:
-            # Create and return the resonse and status of the request. Note: the success or failure of the status will be checked in the Scrape function
-            response = requests.get(url, headers=headers)
-            status_code = response.status_code
-            return status_code, response.json()
         
-        # If the request could not be handled, we will encounter this error
-        except requests.RequestException as e:
-            print(f"Error occurred during HTTP request: {e}")
+
+    def fetch_data(self, url, headers):
+        retries = 5
+        while retries > 0:
+
+            # try, except
+            try:
+                # Create and return the resonse and status of the request. Note: the success or failure of the status will be checked in the Scrape function
+                response = requests.get(url, headers, timeout=8)
+                if response.status_code == 200:
+                    self.TOTAL_SUCCESS += 1
+                    self.logger.info(
+                        f"[{self.TOTAL_SUCCESS}] Successful! [200]"
+                    )
+                    return response.json()
+                else:
+                    self.logger.warning(
+                        f"Request failed with status code {response.status_code}. Retrying..."
+                    )
+                    retries -= 1
+            except requests.Timeout as e:
+                self.logger.warning("Request timed out. Retrying...")
+                retries -= 1
+            except requests.ConnectionError as e:
+                self.logger.error(e)
+                # Assuming ClientConnectorError was meant to handle connection errors
+                # aiohttp's ClientConnectorError is equivalent to requests' ConnectionError
+                retries -= 1
+            time.sleep(0.1)
+        self.logger.error("Max retries exceeded. Give up.")
 
     # Scrape Reddit posts within the specified date range and store in a DataFrame.
     def scrape(self):
-        # Default Agent 
-        agent = "Amir" 
         # This attribute contains the identifier of the first elemnt in the next JSON, This way we somehow create a chain of JSON identifiers
         after = None
-        
+
         # Scrape Reddit for a desired subreddit
         while True:
-            status_code, data = self.fetch_data(self.url if after is None else f"{self.url}&after={after}", {"User-agent": agent})
+            data = self.fetch_data(self.url if after is None else f"{self.url}&after={after}", {"User-agent": 'your bot 0.1'})
             # Check if the request was successful
-            if status_code == 200:
-                after, flag = self.extract_posts(data)
-                # If after is empty or the desired range passed, show the error and break the loop
-                if not after or flag:
-                    print("End of scraping")
-                    break
-
-            # If the request was not successful break the loop
-            else:
+            after, flag = self.extract_posts(data)
+            # If after is empty or the desired range passed, show the error and break the loop
+            if not after or flag:
+                print("End of scraping")
                 break
 
         return self.df
 
     # Extract posts from Reddit data and add them to dataframe based on date range.
-    def extract_posts(self, data: dict):
+    def extract_posts(self, data):
         after = None
         flag = False
 
@@ -66,10 +91,14 @@ class RedditScraper:
                     Choose our metrics. I chose ups, downs, upvote_ratio, num_comments, post_timestamp as the metrics
                     Note: the attribute 'name' here is the identifier of the post
                    """
+                
+                # Calculate user ingagement ratio
+                subsribers = post_data.get('subreddit_subscribers')
+                u_ingagement_ratio = post_data.get("ups")/subsribers
                 # Check if the post timestamp is in the range
                 if self.start_date <= datetime.strptime(post_timestamp, "%Y-%m-%d") <= self.end_date:
-                    new_data = [post_data.get("name"), post_data.get("ups"), post_data.get("downs"),
-                                post_data.get("upvote_ratio"), post_data.get("num_comments"), post_timestamp]
+                    new_data = [post_data.get("name"), post_data.get("ups"), u_ingagement_ratio,
+                                post_data.get("upvote_ratio"), post_data.get("num_comments"), len(post_data.get("title"))]
                 
                     # Add the scraped post's information to dataframe
                     self.df.loc[len(self.df)] = new_data
@@ -101,7 +130,7 @@ class RedditScraper:
 # main
 if __name__ == "__main__":
     # Replace these three attributes with your desire subreddit, start and end time
-    subreddit = "emacs"
+    subreddit = "vim"
     start_date = "2023-09-23"
     end_date = "2023-12-20"
     
