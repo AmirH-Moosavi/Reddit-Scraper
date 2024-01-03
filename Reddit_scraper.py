@@ -2,7 +2,8 @@ import json
 import logging
 import os
 import time
-from datetime import datetime
+from datetime import datetime, date
+from dateutil.relativedelta import relativedelta
 from typing import Tuple, Optional
 
 import colorlog
@@ -134,7 +135,7 @@ class RedditScraper:
         Parameters:
         - data (dict): The JSON response data from Reddit API.
 
-        Returns:
+        Returns:end_date
         - Tuple[Optional[str], bool]: The post identifier for pagination and a flag indicating the end of scraping.
         """
         after, flag = None, False
@@ -143,9 +144,8 @@ class RedditScraper:
             for child in data["data"]["children"]:
                 post_data = child.get("data", {})
                 post_timestamp = self.convert_timestamp(post_data.get("created_utc", 0))
-                print(post_timestamp)
 
-                if self.start_date <= datetime.strptime(post_timestamp, "%Y-%m-%d") <= self.end_date:
+                if self.end_date <= datetime.strptime(post_timestamp, "%Y-%m-%d") <= self.start_date:
                     self.add_post_to_dataframe(post_data)
                 elif self.is_outside_date_range(post_timestamp):
                     return post_data.get("name"), True
@@ -224,9 +224,11 @@ class RedditScraper:
 
 if __name__ == "__main__":
     subreddit = "emacs"
-    start_date = "2023-12-03"
-    end_date = "2024-01-03"
+    start_date = date.today()
+    end_date = start_date - relativedelta(months=3)
+    print(type(start_date))
+    print(type(end_date))
 
-    scraper = RedditScraper(subreddit, start_date, end_date)
+    scraper = RedditScraper(subreddit, str(start_date), str(end_date))
     result_df = scraper.scrape()
     scraper.save_to_csv(subreddit)
