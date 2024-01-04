@@ -1,13 +1,15 @@
-![image](https://github.com/AmirH-Moosavi/Reddit-scraper/assets/68806656/d637f88b-b4b3-4943-9314-72be659b5fc3)# Reddit-scraper
+# Reddit-scraper
 
 This project aims to scrape the Reddit website to compile posts from two different subreddits and make analytical comparisons between them. This project was developed in two phases.
 
 # 1. Reddit Scraper:
 During the first stage of the project, we aim to develop a Python web crawler to collect posts from our desired subreddits and store them in two separate CSV files. To run the script, you'll need Python 3.7 or later installed on your system. You can install the required dependencies by running:
 
+## Installation:
  '''sh
 pip3 install -r requirements.txt
  '''
+# Usage:
 To start the scraper, run the following command:
 '''sh
 python Reddit_scraper.py subreddit1,subreddit2
@@ -17,16 +19,21 @@ Replace subreddit1 and subreddit2 with your desired subreddits. For instance:
 '''sh
 python Reddit_scraper.py vim,emacs
 '''
- ## Architecture of the code
- #### Error Handlers
- This script provided proper functions to handle errors related to unsuccessful requests. To achieve this, after any unsuccessful requests, we try four more times to crawl the posts. However, after five unsuccessful prompts, we give up and break the loop. 
 
- #### Post Extraction and Storage
- Here we are with the most challenging part of this project. Reddit is one of those websites with a really high rate of difficulty to scrape. This is due to its mysterious mechanism of sending the request to the server and consequently getting the response from it. As far as I am concerned, Reddit utilizes a send/receive  mechanism with graphql which is a data query language for APIs and query runtimes. Through this, data would be encrypted which make the crawiinga and processing of the data harder than usual. Anyways, Selenium could be a proper option to crawl data from the Reddit website. However, it was not the objective of this project. Thus, I utilized an API that provides posts and information about subreddits related to the last couple of months. After extracting posts belong to our subreddits, information would be stored in two separate CSV files for the following analytical phase. 
+ ## Code Architecture Overview:
+ ### Error Handlers
+The script incorporates robust error handling to manage unsuccessful requests. After any failed request, the script retries up to five times before giving up.
 
- #### Output
- During the scraping, relavent messages related to the status of the requests would be generated and even if unexpected interruption occurs during the scraping, collected data would be stored in the CSV file. This would allow us to continue the collection process from the exact point that interuption occured, 
- Here is an example of the output:
+ ### Post Extraction and Storage
+The process of extracting posts from Reddit involves addressing the challenges posed by the platform's intricate request-response mechanism. Reddit's method of handling requests, predominantly through GraphQL – a data query language for APIs, encrypts data transmission, making the task of scraping and processing data considerably complex.
+
+<br> While Selenium could have been a viable option for web scraping, this project didn't involve that approach. Instead, an API was leveraged to access posts and subreddit data from the past months. This API served as a gateway to extract relevant posts from the specified subreddits, allowing retrieval of valuable information.
+
+<br> The extracted posts, obtained through this API, were then systematically stored in separate CSV files. This storage setup facilitated the subsequent analytical phase by providing structured datasets ready for analysis and comparison between the selected subreddits.
+
+ ### Output
+The scraper generates informative messages about the status of requests during scraping. If unexpected interruptions occur, the collected data is still stored in the CSV file, enabling the process to resume from the point of interruption.
+#### Example output
  ![image](https://github.com/AmirH-Moosavi/Reddit-scraper/assets/68806656/88bb3f62-e52b-4d78-a0d4-543dd148b641)
 
 
