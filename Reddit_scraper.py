@@ -1,12 +1,13 @@
 import json
 import logging
 import os
+import sys
+import colorlog
+
 import time
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
-from typing import Tuple, Optional
 
-import colorlog
 import pandas as pd
 import requests
 
@@ -27,14 +28,12 @@ class RedditScraper:
     REQUEST_TIMEOUT = 8
     NUMBER_OF_RETRIES = 5
 
-    def __init__(self, sub_reddit: str, start_date: str, end_date: str):
+    def __init__(self):
         self.columns = ["identifier", "ups", "User Engagement Ratio", "upvote ratio", "nummber of comments",
                         "title length"]
         self.df = pd.DataFrame(columns=self.columns)
-        self.url = f"https://www.reddit.com/r/{sub_reddit}/new.json?sort=new&limit=100"
-        self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        self.end_date = datetime.strptime(end_date, "%Y-%m-%d")
-        self.subreddit = sub_reddit
+        self.start_date = datetime.strptime(str(date.today()), "%Y-%m-%d")
+        self.end_date = datetime.strptime(str(date.today() - relativedelta(months=3)), "%Y-%m-%d")
         self.total_success = 0
 
         # Set up console logging with color
@@ -85,7 +84,7 @@ class RedditScraper:
         self.logger.error("Max retries exceeded. Give up.")
         return None
 
-    def is_json(self, response: requests.Response) -> bool:
+    def is_json(self, response: requests.Response):
         try:
             json.loads(response.text)
             return True
@@ -111,7 +110,7 @@ class RedditScraper:
         self.logger.warning("Request timed out or connection error. Retrying...")
         time.sleep(0.1)
 
-    def scrape(self):
+    def scrape(self, url):
         """
            Scrapes Reddit posts within the specified date range and stores them in a DataFrame.
 
@@ -120,11 +119,12 @@ class RedditScraper:
         """
         after = None
         while True:
-            data = self.fetch_data(self.url, after)
+            data = self.fetch_data(url, after)
             after, flag = self.extract_posts(data)
             if not after or flag:
                 self.logger.info(f"End of scraping")
                 break
+        
 
         return self.df
 
@@ -145,6 +145,7 @@ class RedditScraper:
                 post_data = child.get("data", {})
                 post_timestamp = self.convert_timestamp(post_data.get("created_utc", 0))
 
+
                 if self.end_date <= datetime.strptime(post_timestamp, "%Y-%m-%d") <= self.start_date:
                     self.add_post_to_dataframe(post_data)
                 elif self.is_outside_date_range(post_timestamp):
@@ -155,7 +156,7 @@ class RedditScraper:
         return after, flag
 
     @staticmethod
-    def convert_timestamp(timestamp) -> str:
+    def convert_timestamp(timestamp):
         """
             Convert the Unix timestamp to a string in the format "%Y-%m-%d".
 
@@ -191,7 +192,7 @@ class RedditScraper:
         ]
         self.df.loc[len(self.df)] = new_data
 
-    def is_outside_date_range(self, post_timestamp) -> bool:
+    def is_outside_date_range(self, post_timestamp):
         """
             Checks if the post timestamp is outside the specified date range.
 
@@ -203,32 +204,40 @@ class RedditScraper:
         """
         return datetime.strptime(post_timestamp, "%Y-%m-%d") < self.start_date
 
-    def save_to_csv(self, sub_reddit: str) -> None:
+    def save_to_csv(self, df, subreddit):
         """
             Saves the DataFrame to a CSV file.
 
             Parameters:
             - sub_reddit (str): The name of the subreddit used for the CSV filename.
         """
+        
         try:
             directory = "Datasets"
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            filepath = os.path.join(directory, f"{sub_reddit}.csv")
-            self.df.to_csv(filepath, index=False)
+            filepath = os.path.join(directory, f"{subreddit}.csv")
+            df.to_csv(filepath, index=False)
             self.logger.info(f"DataFrame saved to {filepath}")
         except Exception as e:
             self.logger.error(f"Error occurred while saving DataFrame: {e}")
         return None
 
+    def main (self):
+        subreddits = sys.argv[1] if len(sys.argv) > 1 else ""  # Your custom subreddits.
+        assert subreddits != "", "subreddits could not be empty."
+
+        subreddits = subreddits.split(',')
+        assert len(subreddits) == 2, "Enter two valid subreddits."
+        
+        for subreddit in subreddits:
+            self.logger.info(f"\nScraping subreddit: {subreddit}")
+            url = f"https://www.reddit.com/r/{subreddit}/new.json?sort=new&limit=100"
+            result_df = scraper.scrape(url)
+
+            self.save_to_csv(result_df, subreddit)
+   
 
 if __name__ == "__main__":
-    subreddit = "emacs"
-    start_date = date.today()
-    end_date = start_date - relativedelta(months=3)
-    print(type(start_date))
-    print(type(end_date))
-
-    scraper = RedditScraper(subreddit, str(start_date), str(end_date))
-    result_df = scraper.scrape()
-    scraper.save_to_csv(subreddit)
+    scraper = RedditScraper()
+    scraper.main()
