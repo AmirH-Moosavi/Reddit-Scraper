@@ -11,9 +11,9 @@ pip3 install -r requirements.txt
  '''
 # Usage:
 To start the scraper, run the following command:
-'''sh
+'
 python Reddit_scraper.py subreddit1,subreddit2
-'''
+'
 
 Replace subreddit1 and subreddit2 with your desired subreddits. For instance:
 '''sh
