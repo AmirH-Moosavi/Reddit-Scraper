@@ -6,19 +6,19 @@ This project aims to scrape the Reddit website to compile posts from two differe
 During the first stage of the project, we aim to develop a Python web crawler to collect posts from our desired subreddits and store them in two separate CSV files. To run the script, you'll need Python 3.7 or later installed on your system. You can install the required dependencies by running:
 
 ## Installation:
- '''sh
+```sh
 pip3 install -r requirements.txt
- '''
+```
 # Usage:
 To start the scraper, run the following command:
-'
+```sh
 python Reddit_scraper.py subreddit1,subreddit2
-'
+```
 
 Replace subreddit1 and subreddit2 with your desired subreddits. For instance:
-'
+```sh
 python Reddit_scraper.py vim,emacs
-'
+```
 
  ## Code Architecture Overview:
  ### Error Handlers
