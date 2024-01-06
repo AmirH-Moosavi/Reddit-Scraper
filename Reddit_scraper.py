@@ -14,7 +14,7 @@ import requests
 
 class RedditScraper:
     """
-       Let's scrape reddit using this class.
+       Let's scrape Reddit
 
        Parameters:
        - sub_reddit (str): The name of the subreddit to scrape.
@@ -172,11 +172,6 @@ class RedditScraper:
         """
             Add post data to the DataFrame.
 
-            Parameters:
-            - post_data (dict): Dictionary containing post information.
-
-            Returns:
-            - None
         """
         subscribers = post_data.get('subreddit_subscribers', 0)
         u_engagement_ratio = post_data.get("ups", 0) / max(subscribers, 1)
@@ -195,12 +190,7 @@ class RedditScraper:
     def is_outside_date_range(self, post_timestamp):
         """
             Checks if the post timestamp is outside the specified date range.
-
-            Parameters:
-            - post_timestamp (str): The timestamp of the Reddit post.
-
-            Returns:
-            - bool: True if the post is outside the date range, False otherwise.
+        
         """
         return datetime.strptime(post_timestamp, "%Y-%m-%d") < self.start_date
 
@@ -208,8 +198,6 @@ class RedditScraper:
         """
             Saves the DataFrame to a CSV file.
 
-            Parameters:
-            - sub_reddit (str): The name of the subreddit used for the CSV filename.
         """
         
         try:
@@ -229,7 +217,7 @@ class RedditScraper:
 
         subreddits = subreddits.split(',')
         assert len(subreddits) == 2, "Enter two valid subreddits."
-        
+
         for subreddit in subreddits:
             self.logger.info(f"\nScraping subreddit: {subreddit}")
             url = f"https://www.reddit.com/r/{subreddit}/new.json?sort=new&limit=100"
