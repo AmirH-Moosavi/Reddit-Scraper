@@ -35,7 +35,12 @@ The process of extracting posts from Reddit involves addressing the challenges p
 The scraper generates informative messages about the status of requests during scraping. If unexpected interruptions occur, the collected data is still stored in the CSV file, enabling the process to resume from the point of interruption.
 #### Example output
  ![image](https://github.com/AmirH-Moosavi/Reddit-scraper/assets/68806656/88bb3f62-e52b-4d78-a0d4-543dd148b641)
-
-
+ 
 # 2. Reddit Analyzer
 Following the collection of our dataset, the next step involves implementing both analytical and behavioral approaches to unearth patterns within user behavior and post interactions. To achieve this, a series of plots have been generated, allowing for the visualization of appropriate information. These visual representations serve as invaluable tools, empowering us to discern patterns, trends, and inherent characteristics embedded within the subreddits.
+
+ ### Test
+ You are able to test the functionality of this scraper using the following command in the root repository:
+```sh
+pytest
+```
