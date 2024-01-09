@@ -40,7 +40,7 @@ The scraper generates informative messages about the status of requests during s
 Following the collection of our dataset, the next step involves implementing both analytical and behavioral approaches to unearth patterns within user behavior and post interactions. To achieve this, a series of plots have been generated, allowing for the visualization of appropriate information. These visual representations serve as invaluable tools, empowering us to discern patterns, trends, and inherent characteristics embedded within the subreddits.
 
  ### Test
- You are able to test the functionality of this scraper using the following command in the root repository:
+ You are able to test the functionality of this scraper using the following command in the root directory:
 ```sh
 pytest
 ```
